@@ -1,4 +1,8 @@
-import { HubConnection, HubConnectionBuilder } from "@microsoft/signalr";
+import {
+  HubConnection,
+  HubConnectionBuilder,
+  HttpTransportType,
+} from "@microsoft/signalr";
 import { useState, useEffect } from "react";
 
 interface Message {
@@ -20,7 +24,11 @@ function Chat({ username, channel }: ChatProps) {
 
   useEffect(() => {
     const newConnection = new HubConnectionBuilder()
-      .withUrl("http://localhost:5053/chatHub")
+      .withUrl("https://oxieserver20250117001050.azurewebsites.net/chatHub", {
+        skipNegotiation: false,
+        transport: HttpTransportType.WebSockets,
+        withCredentials: true,
+      })
       .withAutomaticReconnect()
       .build();
 
