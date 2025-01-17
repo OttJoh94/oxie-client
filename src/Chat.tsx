@@ -3,7 +3,8 @@ import {
   HubConnectionBuilder,
   HttpTransportType,
 } from "@microsoft/signalr";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { API_URL } from "./config";
 
 interface Message {
   username: string;
@@ -21,10 +22,11 @@ function Chat({ username, channel }: ChatProps) {
   const [connection, setConnection] = useState<HubConnection | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [message, setMessage] = useState<string>("");
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const newConnection = new HubConnectionBuilder()
-      .withUrl("https://oxieserver20250117001050.azurewebsites.net/chatHub", {
+      .withUrl(API_URL, {
         skipNegotiation: false,
         transport: HttpTransportType.WebSockets,
         withCredentials: true,
@@ -53,6 +55,10 @@ function Chat({ username, channel }: ChatProps) {
     }
   }, [connection, channel]);
 
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
   const sendMessage = async (): Promise<void> => {
     if (connection && message) {
       try {
@@ -70,41 +76,49 @@ function Chat({ username, channel }: ChatProps) {
     }
   };
 
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
   return (
-    <div>
-      <div>
+    <div className="flex flex-col items-center items-center max-h-[80vh]">
+      <div className="mb-2">
         <h3>
           Username: {username} : {channel}
         </h3>
       </div>
-      <div className="messages">
-        {messages.map((msg, i) => (
-          <div
-            key={i}
-            className={`mb-2 ${msg.isSystem ? "text-gray-500 italic" : ""}`}
-          >
-            {msg.isSystem ? (
-              msg.content
-            ) : (
-              <>
-                <strong>{msg.username}</strong>: {msg.content}
-                <span className="text-xs text-gray-500 ml-2">
-                  {" - "}
-                  {new Date(msg.timestamp).toLocaleTimeString()}
-                </span>
-              </>
-            )}
-          </div>
-        ))}
+      <div className="chat overflow-scroll h-[80vh] max-h-[80vh] w-[80vw] max-w-[800px] no-scrollbar border border-gray-400 border-opacity-60  rounded-sm p-5">
+        <div className="messages flex-col text-start">
+          {messages.map((msg, i) => (
+            <div key={i} className={``}>
+              {msg.isSystem ? (
+                <span className="text-white bg-slate-950">{msg.content}</span>
+              ) : (
+                <>
+                  <strong>{msg.username}</strong>: {msg.content}
+                </>
+              )}
+            </div>
+          ))}
+          <div ref={messagesEndRef}></div>
+        </div>
       </div>
-      <input
-        value={message}
-        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-          setMessage(e.target.value)
-        }
-        onKeyDown={handleKeyPress}
-      />
-      <button onClick={sendMessage}>Skicka</button>
+      <div className="flex gap-2 mt-2">
+        <input
+          value={message}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+            setMessage(e.target.value)
+          }
+          onKeyDown={handleKeyPress}
+          className="border border-black rounded-md p-1"
+        />
+        <button
+          onClick={sendMessage}
+          className="border border-black rounded-md p-1"
+        >
+          Skicka
+        </button>
+      </div>
     </div>
   );
 }
