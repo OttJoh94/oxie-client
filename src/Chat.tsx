@@ -11,6 +11,8 @@ interface Message {
   content: string;
   timestamp: string;
   isSystem?: boolean;
+  isWelcome?: boolean;
+  isStats?: boolean;
 }
 
 interface ChatProps {
@@ -40,7 +42,7 @@ function Chat({ username, channel }: ChatProps) {
   useEffect(() => {
     if (connection) {
       connection.start().then(() => {
-        connection.invoke("JoinChannel", channel);
+        connection.invoke("JoinChannel", channel, username);
 
         connection.on("ReceiveMessage", (message: Message) => {
           if (message && typeof message === "object") {
@@ -80,24 +82,36 @@ function Chat({ username, channel }: ChatProps) {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
+  const getMessageClassName = (msg: Message): string => {
+    if (msg.isSystem) {
+      return "text-white bg-slate-950";
+    }
+    if (msg.isWelcome) {
+      return "text-red-500";
+    }
+    if (msg.isStats) {
+      return "bg-blue-100 text-blue-800 p-2 rounded-md my-1 font-mono";
+    }
+    return "p-2 hover:bg-gray-50 rounded-md my-1";
+  };
+
   return (
-    <div className="flex flex-col items-center items-center max-h-[80vh]">
+    <div className="flex flex-col items-center max-h-[80vh]">
       <div className="mb-2">
         <h3>
           Username: {username} : {channel}
         </h3>
       </div>
-      <div className="chat overflow-scroll h-[80vh] max-h-[80vh] w-[80vw] max-w-[800px] no-scrollbar border border-gray-400 border-opacity-60  rounded-sm p-5">
+      <div className="flex flex-col justify-end chat overflow-scroll h-[80vh] max-h-[80vh] w-[80vw] max-w-[800px] no-scrollbar border border-gray-400 border-opacity-60 rounded-sm p-5">
         <div className="messages flex-col text-start">
           {messages.map((msg, i) => (
-            <div key={i} className={``}>
-              {msg.isSystem ? (
-                <span className="text-white bg-slate-950">{msg.content}</span>
-              ) : (
+            <div key={i} className="mb-0.5">
+              {!msg.isSystem && !msg.isWelcome && !msg.isStats && (
                 <>
-                  <strong>{msg.username}</strong>: {msg.content}
+                  <strong>{msg.username}: </strong>
                 </>
               )}
+              <span className={getMessageClassName(msg)}>{msg.content}</span>
             </div>
           ))}
           <div ref={messagesEndRef}></div>
