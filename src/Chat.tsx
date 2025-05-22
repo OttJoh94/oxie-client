@@ -29,6 +29,10 @@ function Chat({ username, channel }: ChatProps) {
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const [isAtBottom, setIsAtBottom] = useState<boolean>(true);
   const [glowShadow, setGlowShadow] = useState('');
+  const [newQuestion, setNewQuestion] = useState<string>('');
+  const [newAnswer, setNewAnswer] = useState<string>('');
+  const [showNewQuestionModal, setShowNewQuestionModal] =
+    useState<boolean>(false);
 
   useEffect(() => {
     const newConnection = new HubConnectionBuilder()
@@ -60,6 +64,25 @@ function Chat({ username, channel }: ChatProps) {
       };
     }
   }, [connection, channel]);
+
+  const addQuestion = () => {
+    if (newQuestion === '' || newAnswer === '') return;
+
+    connection?.invoke('AddQuestion', newQuestion, newAnswer);
+
+    setNewQuestion('');
+    setNewAnswer('');
+    setShowNewQuestionModal(false);
+
+    const questionAddedMessage: Message = {
+      username: username,
+      content: `${username} har lagt in en ny fråga!`,
+      timestamp: '',
+      isWelcome: true,
+    };
+
+    setMessages((prev) => [...prev, questionAddedMessage]);
+  };
 
   useEffect(() => {
     if (isAtBottom) {
@@ -115,16 +138,98 @@ function Chat({ username, channel }: ChatProps) {
 
   return (
     <div className="flex flex-col items-center">
-      <div className="mb-2">
+      {showNewQuestionModal && (
+        <div
+          style={{
+            position: 'absolute',
+            width: '100%',
+            height: '100%',
+            backgroundColor: 'rgb(0,0,0,0.5)',
+            overflow: 'none',
+            top: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+          onClick={() => setShowNewQuestionModal(false)}
+        >
+          <div
+            className=""
+            style={{
+              position: 'absolute',
+              backgroundColor: 'whitesmoke',
+              borderRadius: 10,
+              boxShadow: '0px 0px 10px black',
+              height: '60%',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center',
+              gap: 20,
+              padding: 10,
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <strong>Skriv in din nya fråga här</strong>
+            <div>
+              <p>Fråga</p>
+              <input
+                value={newQuestion}
+                placeholder="Fråga"
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  setNewQuestion(e.target.value)
+                }
+                className="border border-black rounded-md p-1"
+              />
+            </div>
+            <div>
+              <p>Svar</p>
+              <input
+                value={newAnswer}
+                placeholder="Svar"
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  setNewAnswer(e.target.value)
+                }
+                className="border border-black rounded-md p-1"
+              />
+            </div>
+            <button
+              onClick={addQuestion}
+              className="border border-black rounded-md p-1 mt-10"
+            >
+              Skicka in frågan
+            </button>
+          </div>
+        </div>
+      )}
+
+      <div
+        className="mb-2"
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          width: '80vw',
+          maxWidth: '800px',
+          padding: 5,
+        }}
+      >
+        <div style={{ width: 154 }}></div>
         <h3>
-          Username: {username} : {channel}
+          Användarnamn: {username} : {channel}
         </h3>
+        <button
+          className="border border-black rounded-md p-1"
+          onClick={() => setShowNewQuestionModal(true)}
+        >
+          Lägg till fråga
+        </button>
       </div>
       <div
         ref={messagesContainerRef}
         onScroll={handleScroll}
         style={{ boxShadow: glowShadow }}
-        className="flex flex-col overflow-y-scroll h-[80vh] w-[80vw] max-w-[800px] no-scrollbar border border-gray-400 border-opacity-60 rounded-sm p-5 text-start"
+        className="flex flex-col overflow-y-scroll h-[70vh] w-[80vw] max-w-[800px] no-scrollbar border border-gray-400 border-opacity-60 rounded-sm p-5 text-start"
       >
         {messages.map((msg, i) => (
           <div key={i} className="mb-0.5">
