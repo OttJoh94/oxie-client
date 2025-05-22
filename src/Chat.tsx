@@ -32,7 +32,7 @@ function Chat({ username, channel }: ChatProps) {
 
   useEffect(() => {
     const newConnection = new HubConnectionBuilder()
-      .withUrl('http://localhost:5053/chatHub', {
+      .withUrl('https://oxieserver20250117001050.azurewebsites.net/chatHub', {
         skipNegotiation: false,
         transport: HttpTransportType.WebSockets,
         withCredentials: true,
