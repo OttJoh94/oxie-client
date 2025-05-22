@@ -68,20 +68,11 @@ function Chat({ username, channel }: ChatProps) {
   const addQuestion = () => {
     if (newQuestion === '' || newAnswer === '') return;
 
-    connection?.invoke('AddQuestion', newQuestion, newAnswer);
+    connection?.invoke('AddQuestion', newQuestion, newAnswer, username);
 
     setNewQuestion('');
     setNewAnswer('');
     setShowNewQuestionModal(false);
-
-    const questionAddedMessage: Message = {
-      username: username,
-      content: `${username} har lagt in en ny fråga!`,
-      timestamp: '',
-      isWelcome: true,
-    };
-
-    setMessages((prev) => [...prev, questionAddedMessage]);
   };
 
   useEffect(() => {
